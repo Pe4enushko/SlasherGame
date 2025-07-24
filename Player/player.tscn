@@ -1,0 +1,151 @@
+[gd_scene load_steps=15 format=3 uid="uid://k3e1np6euoqg"]
+
+[ext_resource type="Script" uid="uid://bjxnuccan1wyx" path="res://player.gd" id="1_l8h54"]
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_4ntmi"]
+
+[sub_resource type="CanvasTexture" id="CanvasTexture_btcbx"]
+
+[sub_resource type="Animation" id="Animation_l8h54"]
+resource_name = "Flip_left"
+length = 0.233
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:scale")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.233333),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(1, 1), Vector2(-1, 1)]
+}
+
+[sub_resource type="Animation" id="Animation_4ntmi"]
+resource_name = "Flip_right"
+length = 0.233
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:scale")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.2333),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(-1, 1), Vector2(1, 1)]
+}
+
+[sub_resource type="Animation" id="Animation_vtle1"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("rotating/Node2D:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [-2.05425]
+}
+
+[sub_resource type="Animation" id="Animation_fhl08"]
+resource_name = "Swing"
+length = 0.2
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("rotating/Node2D:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.0872),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [-2.05425, -0.015708]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_od3ui"]
+_data = {
+&"Flip_left": SubResource("Animation_l8h54"),
+&"Flip_right": SubResource("Animation_4ntmi"),
+&"RESET": SubResource("Animation_vtle1"),
+&"Swing": SubResource("Animation_fhl08")
+}
+
+[sub_resource type="QuadMesh" id="QuadMesh_00tjw"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_k53q1"]
+size = Vector2(24.5, 43)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_l8h54"]
+
+[sub_resource type="Curve" id="Curve_l8h54"]
+_data = [Vector2(0.359375, 0.640449), 0.0, 0.0, 0, 0, Vector2(0.473958, 0.337079), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="CurveTexture" id="CurveTexture_btcbx"]
+curve = SubResource("Curve_l8h54")
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_l8h54"]
+size = Vector2(20, 53)
+
+[node name="Player" type="CharacterBody2D"]
+collision_layer = 5
+collision_mask = 5
+script = ExtResource("1_l8h54")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+visible = false
+
+[node name="BodyTestSprite" type="MeshInstance2D" parent="."]
+position = Vector2(5.68434e-14, -1)
+scale = Vector2(26.5, 26.5)
+mesh = SubResource("CapsuleMesh_4ntmi")
+texture = SubResource("CanvasTexture_btcbx")
+
+[node name="AnimationPlayerRes" type="AnimationPlayer" parent="."]
+libraries = {
+&"": SubResource("AnimationLibrary_od3ui")
+}
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+reset_on_save = false
+libraries = {
+&"": SubResource("AnimationLibrary_od3ui")
+}
+
+[node name="rotating" type="Node2D" parent="."]
+
+[node name="Node2D" type="Node2D" parent="rotating"]
+rotation = -2.05425
+
+[node name="WeaponTestStprite" type="MeshInstance2D" parent="rotating/Node2D"]
+position = Vector2(10.9981, 20.6892)
+rotation = 1.07338
+scale = Vector2(47.75, 6.69)
+mesh = SubResource("QuadMesh_00tjw")
+
+[node name="Weapon" type="Area2D" parent="rotating"]
+position = Vector2(35, 0)
+collision_layer = 2
+collision_mask = 2
+
+[node name="WeaponCollider" type="CollisionShape2D" parent="rotating/Weapon"]
+position = Vector2(-6.25, -4.5)
+shape = SubResource("RectangleShape2D_k53q1")
+
+[node name="MeshInstance2D" type="MeshInstance2D" parent="rotating"]
+z_index = 3
+position = Vector2(4, -14)
+scale = Vector2(12, 4)
+mesh = SubResource("CylinderMesh_l8h54")
+texture = SubResource("CurveTexture_btcbx")
+
+[node name="BodyCollider" type="CollisionShape2D" parent="."]
+position = Vector2(0, -1.5)
+shape = SubResource("RectangleShape2D_l8h54")
