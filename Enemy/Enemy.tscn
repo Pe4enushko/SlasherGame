@@ -55,7 +55,7 @@ tracks/0/keys = {
 
 [sub_resource type="Animation" id="Animation_fhl08"]
 resource_name = "Swing"
-length = 0.2
+length = 0.15
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
@@ -63,8 +63,8 @@ tracks/0/path = NodePath("rotating/Node2D:rotation")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
-"times": PackedFloat32Array(0, 0.0872),
-"transitions": PackedFloat32Array(1, 1),
+"times": PackedFloat32Array(0, 0.15),
+"transitions": PackedFloat32Array(1, 0.353553),
 "update": 0,
 "values": [-2.05425, -0.015708]
 }
@@ -95,8 +95,7 @@ curve = SubResource("Curve_4ntmi")
 size = Vector2(20, 53)
 
 [node name="Enemy" type="CharacterBody2D"]
-collision_layer = 3
-collision_mask = 3
+collision_layer = 2
 script = ExtResource("1_3o4wt")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
@@ -109,12 +108,6 @@ mesh = SubResource("CapsuleMesh_vi685")
 texture = SubResource("CanvasTexture_3o4wt")
 
 [node name="AnimationPlayerRes" type="AnimationPlayer" parent="."]
-libraries = {
-&"": SubResource("AnimationLibrary_od3ui")
-}
-
-[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
-reset_on_save = false
 libraries = {
 &"": SubResource("AnimationLibrary_od3ui")
 }
@@ -132,8 +125,8 @@ mesh = SubResource("QuadMesh_epr5s")
 
 [node name="Weapon" type="Area2D" parent="rotating"]
 position = Vector2(35, 0)
-collision_layer = 6
-collision_mask = 6
+collision_layer = 0
+collision_mask = 4
 
 [node name="WeaponCollider" type="CollisionShape2D" parent="rotating/Weapon"]
 position = Vector2(-6.25, -4.5)
@@ -157,3 +150,6 @@ target_position = Vector2(0, 19)
 [node name="AbyssCheckRight" type="RayCast2D" parent="."]
 position = Vector2(12, 26)
 target_position = Vector2(0, 19)
+
+[connection signal="animation_finished" from="AnimationPlayerRes" to="." method="_on_animation_player_res_animation_finished"]
+[connection signal="animation_started" from="AnimationPlayerRes" to="." method="_on_animation_player_res_animation_started"]
