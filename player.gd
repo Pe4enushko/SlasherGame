@@ -1,39 +1,97 @@
 class_name Player
 extends CharacterBody2D
 
-@export var gravity = 800
-@export var speed = 250
+@export var gravity = 22
+@export var speed = 75
 
-var direction
+var direction: Vector2;
 var dash_smoothing = 1
 @onready var dash_timer = Timer.new()
-var dash_ready = true
+@onready var dash_cooldown = Timer.new()
+@onready var directed_dash_offset = Timer.new()
+@onready var directed_dash_timer = Timer.new()
+
+var dash_ready: 
+	get: return dash_cooldown.is_stopped()
+var preparing_directed_dash: 
+	get: return not directed_dash_offset.is_stopped()
+var dashing:
+	get: return not dash_timer.is_stopped() or direct_dashing
+var direct_dashing:
+	get: return not directed_dash_timer.is_stopped()
+
+var directed_dash_ready = false
 
 @onready var camera = self.find_child("Camera2D") as Camera2D
 
+var direction_side: direction_side_enum
+enum direction_side_enum { LEFT = -1, RIGHT = 1 }
+
 
 func _ready() -> void:
-	dash_timer.wait_time = 0.4
+	dash_cooldown.wait_time = 0.3
+	dash_cooldown.one_shot = true
+	dash_cooldown.timeout.connect(on_dash_cooldown)
+	add_child(dash_cooldown)
+	
+	dash_timer.wait_time = 0.015
 	dash_timer.one_shot = true
-	dash_timer.timeout.connect(on_dash_timeout)
+	dash_timer.timeout.connect(on_dash_stop)
 	add_child(dash_timer)
 	
+	directed_dash_offset.wait_time = 0.3
+	directed_dash_offset.one_shot = true
+	directed_dash_offset.timeout.connect(on_direct_dash_offset)
+	add_child(directed_dash_offset)
 	
+	directed_dash_timer.wait_time = 0.015
+	directed_dash_timer.one_shot = true
+	directed_dash_timer.timeout.connect(on_direct_dash_stop)
+	add_child(directed_dash_timer)
+	
+	
+	direction_side = direction_side_enum.RIGHT
+	
+func on_direct_dash_offset():
+	directed_dash_ready = true
 
-func on_dash_timeout():
-	dash_ready = true
+func on_dash_stop():
+	pass
+
+func on_direct_dash_stop():
+	directed_dash_ready = false
+
+func on_dash_cooldown():
+	pass
 
 func get_input():
-	direction = Input.get_axis("ui_left","ui_right")
+	direction.x = Input.get_axis("ui_left","ui_right")
 	
 	if Input.is_action_just_pressed("ui_up") and is_on_floor():
-		velocity.y -= 400
+		velocity.y -= 500
 	
-	if Input.is_action_just_pressed("dash") and dash_ready:
+	if Input.is_action_pressed("dash") and not dashing:
+		if directed_dash_offset.is_stopped() and !directed_dash_ready:
+			directed_dash_offset.start()
+		$Direct_dash_loader.size.x = lerp(0, 70, (directed_dash_offset.wait_time - directed_dash_offset.time_left) * 2)
+	elif Input.is_action_just_released("dash") and dash_ready:
 		#16 is to sharpen dash at the start
-		direction *= 16
-		dash_ready = false
+		print(directed_dash_ready)
+		if directed_dash_ready:
+			$Direct_dash_loader.size.x = 0
+			
+			directed_dash_timer.start()
+			print("direct dashing")
+		
 		dash_timer.start()
+		
+		if not directed_dash_offset.is_stopped() and not directed_dash_ready:
+			directed_dash_offset.stop()
+			directed_dash_offset.wait_time = 0.3
+			directed_dash_ready = false
+			$Direct_dash_loader.size.x = 0
+			
+		dash_cooldown.start()
 	
 	if Input.is_action_just_pressed("attack"):
 		$AnimationPlayer.play("Swing")
@@ -49,6 +107,15 @@ func get_input():
 				camera.translate(Vector2(0,0))
 			else:
 				b.queue_free()
+	
+	if Input.is_action_just_pressed("slow_time"):
+		Engine.time_scale = 0.2
+		$screenshader.visible = true
+		speed *= 2
+	if Input.is_action_just_released("slow_time"):
+		Engine.time_scale = 1
+		$screenshader.visible = false
+		speed /= 2
 
 func _exit_tree() -> void:
 	#leave camera on after death
@@ -60,28 +127,34 @@ func _exit_tree() -> void:
 
 func _physics_process(delta: float) -> void:
 	get_input()
-	#turn right
+	#direction_side right
 	if Input.is_action_just_pressed("ui_right"):
 		$rotating.scale.x = 1
-	#turn left
+		direction_side = direction_side_enum.RIGHT
+	#direction_side left
 	if Input.is_action_just_pressed("ui_left"):
 		$rotating.scale.x = -1
+		direction_side = direction_side_enum.LEFT
 	
 	# Dash with quadric function acceleration
-	if !dash_timer.is_stopped():
+	if not dashing:
+		velocity.x = lerpf(velocity.x + direction.x * speed, 0, 0.1)
+	else:
 		var t = dash_timer.wait_time
 		var x = (t - dash_timer.time_left) * 2
 		var y = -2.5*pow(x,2) + 1.3*x + 2
-		direction *= y
+		if direct_dashing:
+			print("direct dashing")
+			velocity.y = get_local_mouse_position().normalized().y * y * 6 * speed
+			velocity.x = get_local_mouse_position().normalized().x * y * 12 * speed
+			print(get_local_mouse_position().normalized())
+		else:
+			velocity.x = y * 12 * direction_side * speed
 	
-	# lerp used for smooth 
 	if not is_on_floor():
-		velocity.y += 800 * delta * 1.3 
-		velocity.x = lerpf(velocity.x, speed * (int(dash_ready) + 1) * direction, 0.2)
-	else:
-		velocity.x = lerpf(velocity.x, speed * direction, 0.2)
-		
-	velocity.x = lerpf(velocity.x, 0, 0.01)
+		velocity.y += gravity
+	
+	velocity *= delta * 60.5 / Engine.time_scale
 	
 	move_and_slide()
 	

@@ -1,6 +1,8 @@
-[gd_scene load_steps=15 format=3 uid="uid://k3e1np6euoqg"]
+[gd_scene load_steps=18 format=3 uid="uid://k3e1np6euoqg"]
 
 [ext_resource type="Script" uid="uid://bjxnuccan1wyx" path="res://player.gd" id="1_l8h54"]
+[ext_resource type="Shader" uid="uid://b4exfs5bdekii" path="res://Player/screeb.gdshader" id="2_btcbx"]
+[ext_resource type="Texture2D" uid="uid://dxdn562i4chti" path="res://white.png" id="3_gwnis"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_4ntmi"]
 
@@ -94,8 +96,11 @@ curve = SubResource("Curve_l8h54")
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_l8h54"]
 size = Vector2(20, 53)
 
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_k53q1"]
+shader = ExtResource("2_btcbx")
+
 [node name="Player" type="CharacterBody2D"]
-collision_layer = 5
+collision_layer = 4
 collision_mask = 5
 script = ExtResource("1_l8h54")
 
@@ -149,3 +154,18 @@ texture = SubResource("CurveTexture_btcbx")
 [node name="BodyCollider" type="CollisionShape2D" parent="."]
 position = Vector2(0, -1.5)
 shape = SubResource("RectangleShape2D_l8h54")
+
+[node name="screenshader" type="TextureRect" parent="."]
+visible = false
+material = SubResource("ShaderMaterial_k53q1")
+offset_left = -1108.0
+offset_top = -654.0
+offset_right = 1164.0
+offset_bottom = 700.0
+texture = ExtResource("3_gwnis")
+
+[node name="Direct_dash_loader" type="ColorRect" parent="."]
+offset_left = -20.0
+offset_top = -46.0
+offset_right = -20.0
+offset_bottom = -39.0

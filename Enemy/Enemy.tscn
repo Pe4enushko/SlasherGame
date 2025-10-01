@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3 uid="uid://cyt2n1u1gri1i"]
+[gd_scene load_steps=16 format=3 uid="uid://cyt2n1u1gri1i"]
 
 [ext_resource type="Script" uid="uid://dcr6k4iuxlhch" path="res://Enemy/enemy.gd" id="1_3o4wt"]
 
@@ -94,6 +94,9 @@ curve = SubResource("Curve_4ntmi")
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_d2k2y"]
 size = Vector2(20, 53)
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_3o4wt"]
+size = Vector2(10, 8)
+
 [node name="Enemy" type="CharacterBody2D"]
 collision_layer = 2
 script = ExtResource("1_3o4wt")
@@ -140,16 +143,52 @@ mesh = SubResource("CylinderMesh_vso2s")
 texture = SubResource("CurveTexture_fkela")
 
 [node name="BodyCollider" type="CollisionShape2D" parent="."]
-position = Vector2(0, -1.5)
+position = Vector2(0, -1)
 shape = SubResource("RectangleShape2D_d2k2y")
 
 [node name="AbyssCheckLeft" type="RayCast2D" parent="."]
-position = Vector2(-12, 26)
-target_position = Vector2(0, 19)
+position = Vector2(-18, 26)
+target_position = Vector2(0, 75)
 
 [node name="AbyssCheckRight" type="RayCast2D" parent="."]
-position = Vector2(12, 26)
-target_position = Vector2(0, 19)
+position = Vector2(18, 26)
+target_position = Vector2(0, 75)
+
+[node name="CantJumpOverCheckLeft" type="RayCast2D" parent="."]
+position = Vector2(-24, -46)
+target_position = Vector2(-21, -16)
+hit_from_inside = true
+
+[node name="WallCheckLeft" type="RayCast2D" parent="."]
+position = Vector2(-11, 25)
+target_position = Vector2(-20, 0)
+hit_from_inside = true
+
+[node name="CantJumpOverCheckRight" type="RayCast2D" parent="."]
+position = Vector2(30, -46)
+target_position = Vector2(22, -16)
+hit_from_inside = true
+
+[node name="WallCheckRight" type="RayCast2D" parent="."]
+position = Vector2(11, 25)
+target_position = Vector2(20, 0)
+hit_from_inside = true
+
+[node name="CanJumpOffPlatformLeft" type="RayCast2D" parent="."]
+position = Vector2(-31, -26)
+target_position = Vector2(-62, 128)
+
+[node name="CanJumpOffPlatformRight" type="RayCast2D" parent="."]
+position = Vector2(35, -27)
+target_position = Vector2(62, 128)
+
+[node name="IgnoreSomeFloors" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="IgnoreSomeFloors"]
+position = Vector2(0, 35)
+shape = SubResource("RectangleShape2D_3o4wt")
 
 [connection signal="animation_finished" from="AnimationPlayerRes" to="." method="_on_animation_player_res_animation_finished"]
 [connection signal="animation_started" from="AnimationPlayerRes" to="." method="_on_animation_player_res_animation_started"]

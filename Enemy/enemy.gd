@@ -15,6 +15,7 @@ var being_hit_by_player = false
 var attack_parred = false
 var kickbacked = false
 
+@onready var jump_timer = Timer.new()
 @onready var kickbacked_timer = Timer.new()
 @onready var player = get_tree().get_first_node_in_group("player") as Player
 
@@ -31,6 +32,10 @@ enum State {
 var state = State.IDLE;
 
 func _ready() -> void:
+	jump_timer.one_shot = true
+	jump_timer.wait_time = 1
+	add_child(jump_timer)
+	
 	kickbacked_timer.one_shot = true
 	kickbacked_timer.wait_time = 1
 	add_child(kickbacked_timer)
@@ -38,7 +43,6 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	can_go_left = $AbyssCheckLeft.is_colliding() and kickbacked_timer.is_stopped()
 	can_go_right = $AbyssCheckRight.is_colliding() and kickbacked_timer.is_stopped()
-	
 	
 	if player:
 		vectorToPlayer = (global_position - player.global_position)
@@ -51,16 +55,31 @@ func _process(delta: float) -> void:
 			velocity.x = 0
 			
 		State.CHASING:
-			chase_player(vectorToPlayer, delta)
+			if vectorToPlayer.length() > 30:
+				chase_player(vectorToPlayer, delta)
 			
 		State.WALKING_LEFT:
 			if can_go_left:
-				move_and_collide(Vector2(-speed * delta, 0))
+				velocity.x = -speed
+				var can_jump = $WallCheckLeft.is_colliding() and not $CantJumpOverCheckLeft.is_colliding() and is_on_floor() and jump_timer.is_stopped()
+				
+				if can_jump:
+					velocity.y -= 200
+					jump_timer.start()
+				
+				move_and_slide()
 				$rotating.scale.x = -1
 				
 		State.WALKING_RIGHT:
 			if can_go_right:
-				move_and_collide(Vector2(speed * delta, 0))	
+				velocity.x = speed
+				var can_jump = $WallCheckRight.is_colliding() and not $CantJumpOverCheckRight.is_colliding() and is_on_floor() and jump_timer.is_stopped()
+				
+				if can_jump:
+					velocity.y -= 200
+					jump_timer.start()
+				
+				move_and_slide()
 				$rotating.scale.x = 1
 				
 		State.ATTACKING:
@@ -80,30 +99,61 @@ func _process(delta: float) -> void:
 			state = State.CHASING
 		else:
 			if not (state == State.WALKING_LEFT and can_go_left) and not (state == State.WALKING_RIGHT and can_go_right):
-				state = State.WALKING_LEFT if can_go_left else State.WALKING_RIGHT if can_go_right else State.IDLE
+				if is_on_floor():
+					state = State.WALKING_LEFT if can_go_left else State.WALKING_RIGHT if can_go_right else State.IDLE
+				else:
+					if (state == State.WALKING_LEFT and not can_go_left) or (state == State.WALKING_RIGHT and not can_go_right):
+						state = State.IDLE
+					
 		
 		if vectorToPlayer.length() < 50:
 			state = State.ATTACKING
 			
+	
 	if kickbacked:
 		kickbacked = false
-		velocity.x += vectorToPlayer.x * 6
+		velocity.x += vectorToPlayer.x * 8
 		velocity.y -= 100
 		move_and_slide()
 		
-	if not is_on_floor():
+	var playerIgnorer = $IgnoreSomeFloors as Area2D
+	if not is_on_floor() or len(playerIgnorer.get_overlapping_bodies()) > 0:
 		velocity.y += gravity * delta
 		move_and_slide()
 	
 	
 
 func chase_player(vectorToPlayer: Vector2, delta: float):
-	if vectorToPlayer.x > 0 and can_go_left:
+	if vectorToPlayer.x > 0 and (can_go_left or ($CanJumpOffPlatformLeft.is_colliding() and not $AbyssCheckLeft.is_colliding())):
 		$rotating.scale.x = -1
-		move_local_x(-speed * delta)
-	elif vectorToPlayer.x < 0 and can_go_right:
+		velocity.x = -speed
+		var can_jump = ($WallCheckLeft.is_colliding() 
+			and not $CantJumpOverCheckLeft.is_colliding() 
+			and is_on_floor() 
+			or ($CanJumpOffPlatformLeft.is_colliding() and not $AbyssCheckLeft.is_colliding())
+			and jump_timer.is_stopped())
+				
+		if can_jump:
+			velocity.y -= 200
+			jump_timer.start()
+			
+		move_and_slide()
+		
+	elif vectorToPlayer.x < 0 and (can_go_right or ($CanJumpOffPlatformRight.is_colliding() and not $AbyssCheckRight.is_colliding())):
 		$rotating.scale.x = 1
-		move_local_x(speed * delta)
+		velocity.x = speed
+		
+		var can_jump = ($WallCheckRight.is_colliding() 
+			and not $CantJumpOverCheckRight.is_colliding() 
+			and is_on_floor() 
+			or ($CanJumpOffPlatformRight.is_colliding() and not $AbyssCheckRight.is_colliding())
+			and jump_timer.is_stopped())
+				
+		if can_jump:
+			velocity.y -= 200
+			jump_timer.start()
+			
+		move_and_slide()
 
 
 func _on_animation_player_res_animation_started(anim_name: StringName) -> void:
