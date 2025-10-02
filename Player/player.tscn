@@ -57,7 +57,7 @@ tracks/0/keys = {
 
 [sub_resource type="Animation" id="Animation_fhl08"]
 resource_name = "Swing"
-length = 0.2
+length = 0.1
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
@@ -169,3 +169,9 @@ offset_left = -20.0
 offset_top = -46.0
 offset_right = -20.0
 offset_bottom = -39.0
+
+[node name="tracer" type="Line2D" parent="."]
+points = PackedVector2Array(0, 0, 0, 0)
+width = 2.0
+default_color = Color(0.60933, 0.60933, 0.60933, 1)
+texture_mode = 2

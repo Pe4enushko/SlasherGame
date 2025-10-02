@@ -4,7 +4,7 @@ extends CharacterBody2D
 @export var gravity = 800
 @export var speed = 200
 
-@export var attack_speed = 20
+@export var attack_speed = 25
 var delay = 0
 
 var can_go_left
