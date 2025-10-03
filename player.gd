@@ -57,6 +57,9 @@ func on_dash_cooldown():
 
 func get_input():
 	direction.x = Input.get_axis("ui_left","ui_right")
+
+	if direction.x == 0 and abs(velocity.x) < 20 and $Sprite.animation != "SWING":
+		$Sprite.animation = "IDLE"
 	
 	if Input.is_action_just_pressed("ui_up") and is_on_floor():
 		velocity.y -= 500
@@ -88,19 +91,20 @@ func get_input():
 		dash_cooldown.start()
 	
 	if Input.is_action_just_pressed("attack"):
-		$AnimationPlayer.play("Swing")
-		$AnimationPlayer.queue("RESET")
+		#$Sprite.queue("IDLE")
+		$Sprite.play("SWING")
 		
-		var wea := $rotating/Weapon as Area2D
+		var wea := $WeaponNode/Weapon as Area2D
 		for b in wea.get_overlapping_bodies():
 			var e = b as Enemy
-			if e and e.trying_to_hit_player:
-				e.attack_parred = true
-				camera.translate(Vector2(-10,0))
-				camera.translate(Vector2(10,0))
-				camera.translate(Vector2(0,0))
-			else:
-				b.queue_free()
+			if e:
+				if e.trying_to_hit_player:
+					e.attack_parred = true
+					camera.translate(Vector2(-10,0))
+					camera.translate(Vector2(10,0))
+					camera.translate(Vector2(0,0))
+				else:
+					b.queue_free()
 
 func _exit_tree() -> void:
 	#leave camera on after death
@@ -114,12 +118,16 @@ func _physics_process(delta: float) -> void:
 	get_input()
 	#direction_side right
 	if Input.is_action_just_pressed("ui_right"):
-		$rotating.scale.x = 1
+		$WeaponNode.scale.x = 1#0.261
+		$Sprite.scale.x = 0.261
 		direction_side = direction_side_enum.RIGHT
+		$Sprite.animation = "RUN"
 	#direction_side left
 	if Input.is_action_just_pressed("ui_left"):
-		$rotating.scale.x = -1
+		$WeaponNode.scale.x = -1#0.261
+		$Sprite.scale.x = -0.261
 		direction_side = direction_side_enum.LEFT
+		$Sprite.animation = "RUN"
 	
 	# Dash with quadric function acceleration
 	if not dashing:
@@ -141,6 +149,7 @@ func _physics_process(delta: float) -> void:
 		velocity.y += gravity
 	
 	velocity *= delta * 60.5 / Engine.time_scale
+	
 	
 	move_and_slide()
 	
