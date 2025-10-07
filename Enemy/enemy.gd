@@ -4,8 +4,11 @@ extends CharacterBody2D
 @export var gravity = 800
 @export var speed = 200
 
-@export var attack_speed = 25
+
+@export var attack_delay = 25
 var delay = 0
+
+var health = 3
 
 var can_go_left
 var can_go_right
@@ -84,8 +87,9 @@ func _process(delta: float) -> void:
 				
 		State.ATTACKING:
 			# Attack with a delay
-			if delay >= attack_speed:
+			if delay >= attack_delay:
 				delay = 0
+				
 				
 				$AnimationPlayerRes.queue("Swing")
 			else:
@@ -94,7 +98,7 @@ func _process(delta: float) -> void:
 				delay += 1
 	
 	# Changing states
-	if delay == 0:
+	if delay <= 0:
 		if vectorToPlayer.length() < 150:
 			state = State.CHASING
 		else:
@@ -112,7 +116,7 @@ func _process(delta: float) -> void:
 	
 	if kickbacked:
 		kickbacked = false
-		velocity.x += vectorToPlayer.x * 8
+		velocity.x += clampf(vectorToPlayer.x * 8, -30, 30)
 		velocity.y -= 100
 		move_and_slide()
 		

@@ -10,6 +10,10 @@ var dash_smoothing = 1
 @onready var dash_cooldown = Timer.new()
 @onready var directed_dash_offset = Timer.new()
 @onready var directed_dash_timer = Timer.new()
+@onready var attack_cooldown = Timer.new()
+@onready var slowtime_max_duration = Timer.new()
+
+var slowtime_time_out = false
 
 var dash_ready: 
 	get: return dash_cooldown.is_stopped()
@@ -29,11 +33,16 @@ var direction_side: direction_side_enum
 enum direction_side_enum { LEFT = -1, RIGHT = 1 }
 
 func _ready() -> void:
-	register_timer(dash_cooldown, 0.3, on_dash_cooldown)
-	register_timer(dash_timer, 0.015, on_dash_stop)
+	register_timer(dash_cooldown, 0.9, on_dash_cooldown)
+	register_timer(dash_timer, 0.05, on_dash_stop)
 	register_timer(directed_dash_offset, 0.3, on_direct_dash_offset)
 	register_timer(directed_dash_timer, 0.215, on_direct_dash_stop)
+	register_timer(attack_cooldown, 0.15, null)
+	register_timer(slowtime_max_duration, 0.5, slowtime_end)
 	direction_side = direction_side_enum.RIGHT
+	
+func slowtime_end():
+	slowtime_time_out = true
 	
 func register_timer(t: Timer, duration: float, callback):
 	t.wait_time = duration
@@ -53,29 +62,46 @@ func on_direct_dash_stop():
 	velocity /= 10
 
 func on_dash_cooldown():
-	pass
+	slowtime_time_out = false
+
+func swing_anim_ended():
+	return ($Sprite.sprite_frames as SpriteFrames).get_frame_count($Sprite.animation) == $Sprite.frame + 1
 
 func get_input():
 	direction.x = Input.get_axis("ui_left","ui_right")
 
-	if direction.x == 0 and abs(velocity.x) < 20 and $Sprite.animation != "SWING":
+	if not dash_cooldown.is_stopped():
+		$Time_visu.visible = true
+		$Time_visu.scale.x = ((dash_cooldown.wait_time - dash_cooldown.time_left) / dash_cooldown.wait_time)
+	else:
+		$Time_visu.visible = false
+
+	if (direction.x == 0 and abs(velocity.x) < 20 and swing_anim_ended()) or swing_anim_ended():
 		$Sprite.animation = "IDLE"
 	
 	if Input.is_action_just_pressed("ui_up") and is_on_floor():
 		velocity.y -= 500
 		
-	if Input.is_action_pressed("direct_dash") and not dashing:
+	if Input.is_action_pressed("direct_dash") and not dashing and not slowtime_time_out and dash_ready:
 		#set visuals
 		Input.set_default_cursor_shape(Input.CursorShape.CURSOR_CROSS)
 		Engine.time_scale = 0.2
 		$screenshader.visible = true
 		
+		$Time_visu.visible = true
+		$Time_visu.scale.x = (slowtime_max_duration.time_left / slowtime_max_duration.wait_time)
+		
 		$tracer.points[1] = get_local_mouse_position()
-			
+		
+		if slowtime_max_duration.is_stopped() and not slowtime_time_out:
+			slowtime_max_duration.start(slowtime_max_duration.wait_time)
+		
 		#freeze
 		velocity = velocity.normalized()
-	elif Input.is_action_just_released("direct_dash") and not dashing:
+	elif (Input.is_action_just_released("direct_dash") and not dashing) or (Input.is_action_pressed("direct_dash") and slowtime_time_out and not dashing) and dash_ready:
 		# reset visuals
+		$Time_visu.visible = false
+		
 		Input.set_default_cursor_shape(Input.CursorShape.CURSOR_ARROW)
 		$screenshader.visible = false
 		Engine.time_scale = 1
@@ -83,6 +109,7 @@ func get_input():
 		direct_dash_vector = get_local_mouse_position().normalized()
 		directed_dash_timer.start()
 		dash_cooldown.start()
+		slowtime_max_duration.stop()
 		
 		$tracer.points[1] = Vector2(0,0)
 		
@@ -91,20 +118,29 @@ func get_input():
 		dash_cooldown.start()
 	
 	if Input.is_action_just_pressed("attack"):
-		#$Sprite.queue("IDLE")
-		$Sprite.play("SWING")
+		if attack_cooldown.is_stopped():
+			if randi_range(0,100) > 50:
+				$Sprite.play("SWING")
+			else:
+				$Sprite.play("SWING_REVERSE")
+			attack_cooldown.start()
 		
-		var wea := $WeaponNode/Weapon as Area2D
-		for b in wea.get_overlapping_bodies():
-			var e = b as Enemy
-			if e:
-				if e.trying_to_hit_player:
-					e.attack_parred = true
-					camera.translate(Vector2(-10,0))
-					camera.translate(Vector2(10,0))
-					camera.translate(Vector2(0,0))
-				else:
-					b.queue_free()
+			var wea := $WeaponNode/Weapon as Area2D
+			for b in wea.get_overlapping_bodies():
+				var e = b as Enemy
+				if e:
+					if e.trying_to_hit_player:
+						e.attack_parred = true
+						e.delay -= 25
+						camera.translate(Vector2(-10,0))
+						camera.translate(Vector2(10,0))
+						camera.translate(Vector2(0,0))
+					else:
+						e.kickbacked = true
+						e.delay -= 10
+						e.health -= 1
+						if e.health == 0:
+							b.queue_free()
 
 func _exit_tree() -> void:
 	#leave camera on after death
@@ -117,17 +153,19 @@ func _exit_tree() -> void:
 func _physics_process(delta: float) -> void:
 	get_input()
 	#direction_side right
-	if Input.is_action_just_pressed("ui_right"):
+	if Input.is_action_pressed("ui_right"):
 		$WeaponNode.scale.x = 1#0.261
 		$Sprite.scale.x = 0.261
 		direction_side = direction_side_enum.RIGHT
-		$Sprite.animation = "RUN"
+		if $Sprite.animation == "IDLE" or swing_anim_ended():
+			$Sprite.animation = "RUN"
 	#direction_side left
-	if Input.is_action_just_pressed("ui_left"):
+	if Input.is_action_pressed("ui_left"):
 		$WeaponNode.scale.x = -1#0.261
 		$Sprite.scale.x = -0.261
 		direction_side = direction_side_enum.LEFT
-		$Sprite.animation = "RUN"
+		if $Sprite.animation == "IDLE" or swing_anim_ended():
+			$Sprite.animation = "RUN"
 	
 	# Dash with quadric function acceleration
 	if not dashing:

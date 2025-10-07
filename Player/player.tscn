@@ -6,7 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://dxdn562i4chti" path="res://white.png" id="3_gwnis"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_k53q1"]
-size = Vector2(61, 74)
+size = Vector2(79.5, 74)
 
 [sub_resource type="Animation" id="Animation_od3ui"]
 resource_name = "Flip_left"
@@ -70,7 +70,7 @@ script = ExtResource("1_l8h54")
 position = Vector2(6, -1)
 scale = Vector2(0.261475, 0.261475)
 sprite_frames = ExtResource("2_gwnis")
-animation = &"IDLE"
+animation = &"SWING_REVERSE"
 autoplay = "IDLE"
 
 [node name="WeaponNode" type="Node2D" parent="."]
@@ -81,7 +81,7 @@ collision_layer = 0
 collision_mask = 2
 
 [node name="WeaponCollider" type="CollisionShape2D" parent="WeaponNode/Weapon"]
-position = Vector2(6, -7)
+position = Vector2(-3.25, -7)
 shape = SubResource("RectangleShape2D_k53q1")
 
 [node name="AnimationPlayerRes" type="AnimationPlayer" parent="."]
@@ -113,3 +113,9 @@ points = PackedVector2Array(0, 0, 0, 0)
 width = 2.0
 default_color = Color(0.60933, 0.60933, 0.60933, 1)
 texture_mode = 2
+
+[node name="Time_visu" type="ColorRect" parent="."]
+offset_left = -20.0
+offset_top = -42.0
+offset_right = 20.0
+offset_bottom = -35.0

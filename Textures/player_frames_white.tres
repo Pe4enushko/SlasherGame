@@ -1,4 +1,4 @@
-[gd_resource type="SpriteFrames" load_steps=8 format=3 uid="uid://dalisex30opel"]
+[gd_resource type="SpriteFrames" load_steps=7 format=3 uid="uid://dalisex30opel"]
 
 [ext_resource type="Texture2D" uid="uid://ckf6q3ohn1cao" path="res://Textures/Spritesheet_white.png" id="1_a62kc"]
 
@@ -22,10 +22,6 @@ region = Rect2(512, 0, 512, 512)
 atlas = ExtResource("1_a62kc")
 region = Rect2(1024, 0, 512, 512)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_msdk3"]
-atlas = ExtResource("1_a62kc")
-region = Rect2(0, 0, 512, 512)
-
 [resource]
 animations = [{
 "frames": [{
@@ -42,6 +38,9 @@ animations = [{
 }, {
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_p33ud")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_kf3j7")
 }],
 "loop": true,
 "name": &"RUN",
@@ -53,11 +52,19 @@ animations = [{
 }, {
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_ts4yw")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_msdk3")
 }],
 "loop": false,
 "name": &"SWING",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ts4yw")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_56p02")
+}],
+"loop": true,
+"name": &"SWING_REVERSE",
 "speed": 10.0
 }]
